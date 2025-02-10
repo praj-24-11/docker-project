@@ -1,0 +1,36 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+  AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+  AWS_DEFAULT_REGION: "us-east-1"
+  IMAGE_NAME: "my-web-app"
+  ECR_REPO_URL: "your-ecr-repo-url"
+  CLUSTER_NAME: "my-cluster"
+  SERVICE_NAME: "my-service"
+  TASK_DEFINITION: "my-task-definition"
+
+# Build Docker Image and Push to AWS ECR
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:19.03.12-dind
+  before_script:
+    - docker login -u AWS -p $(aws ecr get-login-password --region $AWS_DEFAULT_REGION) https://$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+  script:
+    - docker build -t $IMAGE_NAME .
+    - docker tag $IMAGE_NAME:latest $ECR_REPO_URL/$IMAGE_NAME:latest
+    - docker push $ECR_REPO_URL/$IMAGE_NAME:latest
+
+# Deploy to ECS
+deploy:
+  stage: deploy
+  image: hashicorp/terraform:latest
+  before_script:
+    - terraform init
+    - terraform plan -out=tfplan
+  script:
+    - terraform apply -auto-approve
