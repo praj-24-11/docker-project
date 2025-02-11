@@ -11,6 +11,7 @@ variables:
   CLUSTER_NAME: "my-cluster"
   SERVICE_NAME: "my-service"
   TASK_DEFINITION: "my-task-definition"
+  AWS_ACCOUNT_ID: $AWS_ACCOUNT_ID
 
 # Build Docker Image and Push to AWS ECR
 build:
